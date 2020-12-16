@@ -1,0 +1,21 @@
+# MacOS
+.DS_Store
+
+# IntelliJ
+*.iml
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+
+# Gradle
+.gradle
+!gradle/
+local.properties
+
+# Kotlin
+**/build/**
+.externalNativeBuild
+.cxx
