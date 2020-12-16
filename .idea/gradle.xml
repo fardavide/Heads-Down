@@ -10,6 +10,7 @@
                 <projects>
                   <project path="$PROJECT_DIR$/gradle" />
                   <project path="$PROJECT_DIR$/gradle/plugin" />
+                  <project path="$PROJECT_DIR$/gradle/publishPlugin" />
                 </projects>
               </build>
             </builds>
@@ -25,6 +26,7 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/gradle" />
             <option value="$PROJECT_DIR$/gradle/plugin" />
+            <option value="$PROJECT_DIR$/gradle/publishPlugin" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

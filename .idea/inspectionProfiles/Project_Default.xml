@@ -19,6 +19,9 @@
     <inspection_tool class="PreviewNeedsComposableAnnotation" enabled="true" level="ERROR" enabled_by_default="true">
       <option name="previewFile" value="true" />
     </inspection_tool>
+    <inspection_tool class="PropertyName" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="namePattern" value="[a-zA-Z][A-Za-z\d]*" />
+    </inspection_tool>
     <inspection_tool class="ShellCheck" enabled="true" level="ERROR" enabled_by_default="true">
       <shellcheck_settings value="SC2155" />
     </inspection_tool>

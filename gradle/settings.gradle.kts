@@ -1,4 +1,5 @@
 include("plugin")
+include("publishPlugin")
 
 pluginManagement {
     repositories {
