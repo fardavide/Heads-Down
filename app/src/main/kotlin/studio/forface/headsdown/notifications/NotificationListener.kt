@@ -1,9 +1,11 @@
 package studio.forface.headsdown.notifications
 
-import android.app.ActivityManager
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.app.usage.UsageStats
+import android.app.usage.UsageStatsManager
 import android.content.Intent
+import android.os.Build
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import androidx.core.content.getSystemService
@@ -18,12 +20,16 @@ import studio.forface.fluentnotifications.builder.channel
 import studio.forface.fluentnotifications.createNotification
 import studio.forface.fluentnotifications.enum.NotificationImportance
 import studio.forface.headsdown.R
+import studio.forface.headsdown.model.PackageName
 import studio.forface.headsdown.ui.Strings
 import studio.forface.headsdown.usecase.GetAllBlockingHeadsUpApps
+import studio.forface.headsdown.utils.d
 import studio.forface.headsdown.utils.i
 import studio.forface.headsdown.viewmodel.AppsWithSettingsState
 import studio.forface.headsdown.viewmodel.AppsWithSettingsState.Data
 import studio.forface.headsdown.viewmodel.AppsWithSettingsState.Loading
+import kotlin.time.hours
+import kotlin.time.milliseconds
 
 
 class NotificationListener : NotificationListenerService() {
@@ -38,8 +44,8 @@ class NotificationListener : NotificationListenerService() {
             "Cannot get NotificationManager service"
         }
     }
-    private val activityManager by lazy {
-        requireNotNull(applicationContext.getSystemService<ActivityManager>()) {
+    private val usageStatsManager by lazy {
+        requireNotNull(applicationContext.getSystemService<UsageStatsManager>()) {
             "Cannot get ActivityManager service"
         }
     }
@@ -79,11 +85,12 @@ class NotificationListener : NotificationListenerService() {
             }
 
             val appsWithSettings = (allBlockingHeadsUpApps.value as Data).appsWithSettings
-            val foregroundPackageNames =
-                activityManager.runningAppProcesses.flatMap { it.pkgList.toList() }
+            val foregroundPackageNames = getCurrentForegroundApps()
+            logger d "NotificationListener current running apps" +
+                foregroundPackageNames.joinToString()
 
             val shouldBlock = appsWithSettings.any {
-                it.app.packageName.value in foregroundPackageNames
+                it.app.packageName in foregroundPackageNames
             }
 
             if (shouldBlock) {
@@ -124,6 +131,29 @@ class NotificationListener : NotificationListenerService() {
     private fun clearEmptyNotification() {
         notificationManager.cancel(NotificationId)
     }
+
+    private fun getCurrentForegroundApps(): List<PackageName> {
+        val currentTime = System.currentTimeMillis()
+        val usageStats = usageStatsManager.queryUsageStats(
+            UsageStatsManager.INTERVAL_DAILY,
+            (currentTime.milliseconds - 3.hours).toLongMilliseconds(),
+            currentTime
+        )
+        requireNotNull(usageStats) { "Cannot retrieve usage statistics from UsageStatsManager" }
+        return usageStats
+            .filterCurrentlyInForeground(currentTime)
+            .map { PackageName(it.packageName) }
+    }
+
+    private fun Collection<UsageStats>.filterCurrentlyInForeground(currentTime: Long) =
+        filter {
+            val lastTime = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                it.lastTimeVisible
+            } else {
+                it.lastTimeUsed
+            }
+            lastTime in currentTime-60_000..currentTime
+        }
 
     override fun onDestroy() {
         super.onDestroy()

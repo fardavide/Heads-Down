@@ -40,6 +40,7 @@ import studio.forface.headsdown.ui.Strings
 import studio.forface.headsdown.viewmodel.AppState
 import studio.forface.headsdown.viewmodel.AppViewModel
 import studio.forface.headsdown.viewmodel.AppsWithSettingsState
+import studio.forface.headsdown.viewmodel.GrantedPermissionsState
 
 
 class MainActivity : AppCompatActivity() {
@@ -74,15 +75,20 @@ fun AppBody(
             topBar = { Toolbar(isAtTop) }
         ) {
             Column {
-                if (state.hasNotificationAccess.not()) {
-                    val context = AmbientContext.current
-                    val goToSettings = {
+                val context = AmbientContext.current
+                PermissionsBanner(
+                    state = state.permissionsState,
+                    goToNotificationAccessSettings = {
                         val intent = Intent()
                         intent.action = Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS
                         context.startActivity(intent)
-                    }
-                    NotificationAccessBanner(goToSettings = goToSettings)
-                }
+                    },
+                    gotToUsageStatsAccessSettings = {
+                        val intent = Intent()
+                        intent.action = Settings.ACTION_USAGE_ACCESS_SETTINGS
+                        context.startActivity(intent)
+                    },
+                )
                 SettingsPage(
                     state = state,
                     onAddToBlockHeadsUp = onAddToBlockHeadsUp,
@@ -103,8 +109,10 @@ fun Toolbar(isAtTop: Boolean) {
         backgroundColor = animate(target = backgroundColor),
         elevation = animate(target = elevation)
     ) {
-        Column(
-            Modifier.align(Alignment.CenterVertically).fillMaxWidth(),
+        Column(Modifier
+            .align(Alignment.CenterVertically)
+            .fillMaxWidth()
+            .padding(4.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -147,6 +155,54 @@ fun Loading() {
 }
 
 @Composable
+fun PermissionsBanner(
+    state: GrantedPermissionsState,
+    goToNotificationAccessSettings: () -> Unit,
+    gotToUsageStatsAccessSettings: () -> Unit
+) {
+    if (state == GrantedPermissionsState.All) return
+
+    val (title, goToSettings) = when (state) {
+        GrantedPermissionsState.None ->
+            Pair(
+                Strings.NotificationAndUsageStatsAccessRequiredMessage,
+                { goToNotificationAccessSettings(); gotToUsageStatsAccessSettings() }
+            )
+        GrantedPermissionsState.OnlyNotificationAccess ->
+            Strings.UsageStatsAccessRequiredMessage to gotToUsageStatsAccessSettings
+        GrantedPermissionsState.OnlyUsageStatsAccess ->
+            Strings.NotificationAccessRequiredMessage to goToNotificationAccessSettings
+        GrantedPermissionsState.All -> throw AssertionError()
+    }
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colors.error)
+            .clickable(onClick = goToSettings)
+            .padding(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            title,
+            color = MaterialTheme.colors.onError,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        val grantAccessString = AnnotatedString(
+            Strings.GrandAccessAction,
+            listOf(
+                SpanStyleRange(
+                    SpanStyle(textDecoration = TextDecoration.Underline),
+                    0,
+                    Strings.GrandAccessAction.length
+                )
+            )
+        )
+        Text(grantAccessString, color = MaterialTheme.colors.onError)
+    }
+}
+
+@Composable
 fun NotificationAccessBanner(goToSettings: () -> Unit) {
     Column(
         Modifier
@@ -163,12 +219,12 @@ fun NotificationAccessBanner(goToSettings: () -> Unit) {
         )
         Spacer(modifier = Modifier.height(4.dp))
         val grantAccessString = AnnotatedString(
-            Strings.GrandNotificationAccessAction,
+            Strings.GrandAccessAction,
             listOf(
                 SpanStyleRange(
                     SpanStyle(textDecoration = TextDecoration.Underline),
                     0,
-                    Strings.GrandNotificationAccessAction.length
+                    Strings.GrandAccessAction.length
                 )
             )
         )
@@ -252,7 +308,33 @@ val appsWithSettings = listOf(
 @Preview(name = "Loading with permissions", showBackground = true)
 fun LoadingWithPermissionsPreview() {
     val state = AppState(
-        hasNotificationAccess = true,
+        permissionsState = GrantedPermissionsState.All,
+        generalHeadsUpBlockEnabled = true,
+        AppsWithSettingsState.Loading
+    )
+    val appStateFlow = MutableStateFlow(state)
+
+    AppBody(appStateFlow, {}, {})
+}
+
+@Composable
+@Preview(name = "Loading with only notification permissions", showBackground = true)
+fun LoadingWithOnlyNotificationPermissionPreview() {
+    val state = AppState(
+        permissionsState = GrantedPermissionsState.OnlyNotificationAccess,
+        generalHeadsUpBlockEnabled = true,
+        AppsWithSettingsState.Loading
+    )
+    val appStateFlow = MutableStateFlow(state)
+
+    AppBody(appStateFlow, {}, {})
+}
+
+@Composable
+@Preview(name = "Loading with only usage permissions", showBackground = true)
+fun LoadingWithOnlyUsagePermissionPreview() {
+    val state = AppState(
+        permissionsState = GrantedPermissionsState.OnlyUsageStatsAccess,
         generalHeadsUpBlockEnabled = true,
         AppsWithSettingsState.Loading
     )
@@ -265,7 +347,7 @@ fun LoadingWithPermissionsPreview() {
 @Preview(name = "Loading without permissions", showBackground = true)
 fun LoadingWithoutPermissionsPreview() {
     val state = AppState(
-        hasNotificationAccess = false,
+        permissionsState = GrantedPermissionsState.None,
         generalHeadsUpBlockEnabled = true,
         AppsWithSettingsState.Loading
     )
@@ -278,7 +360,33 @@ fun LoadingWithoutPermissionsPreview() {
 @Preview(name = "List with permissions", showBackground = true)
 fun ListWithPermissionPreview() {
     val state = AppState(
-        hasNotificationAccess = true,
+        permissionsState = GrantedPermissionsState.All,
+        generalHeadsUpBlockEnabled = true,
+        AppsWithSettingsState.Data(appsWithSettings)
+    )
+    val appStateFlow = MutableStateFlow(state)
+
+    AppBody(appStateFlow, {}, {})
+}
+
+@Composable
+@Preview(name = "List with only notification permissions", showBackground = true)
+fun ListWithOnlyNotificationPermissionPreview() {
+    val state = AppState(
+        permissionsState = GrantedPermissionsState.OnlyNotificationAccess,
+        generalHeadsUpBlockEnabled = true,
+        AppsWithSettingsState.Data(appsWithSettings)
+    )
+    val appStateFlow = MutableStateFlow(state)
+
+    AppBody(appStateFlow, {}, {})
+}
+
+@Composable
+@Preview(name = "List with only usage permissions", showBackground = true)
+fun ListWithOnlyUsagePermissionPreview() {
+    val state = AppState(
+        permissionsState = GrantedPermissionsState.OnlyUsageStatsAccess,
         generalHeadsUpBlockEnabled = true,
         AppsWithSettingsState.Data(appsWithSettings)
     )
@@ -291,7 +399,7 @@ fun ListWithPermissionPreview() {
 @Preview(name = "List without permissions", showBackground = true)
 fun ListWithoutPermissionPreview() {
     val state = AppState(
-        hasNotificationAccess = false,
+        permissionsState = GrantedPermissionsState.None,
         generalHeadsUpBlockEnabled = true,
         AppsWithSettingsState.Data(appsWithSettings)
     )

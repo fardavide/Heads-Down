@@ -1,8 +1,6 @@
 package studio.forface.headsdown
 
-import android.content.ComponentName
 import android.content.Context
-import android.provider.Settings
 import androidx.datastore.preferences.createDataStore
 import co.touchlab.kermit.LogcatLogger
 import co.touchlab.kermit.Logger
@@ -13,7 +11,7 @@ import studio.forface.headsdown.data.AppRepository
 import studio.forface.headsdown.data.AppRepositoryImpl
 import studio.forface.headsdown.data.SettingsSource
 import studio.forface.headsdown.notifications.NotificationAccessVerifier
-import studio.forface.headsdown.notifications.NotificationListener
+import studio.forface.headsdown.usagestats.UsageStatsAccessVerifier
 import studio.forface.headsdown.usecase.*
 import studio.forface.headsdown.viewmodel.AppViewModel
 
@@ -26,16 +24,10 @@ val dataModule = module {
     single { get<Context>().packageManager }
 
     // Notifications
-    single {
-        val context: Context = get()
-        NotificationAccessVerifier(
-            notificationListenerComponentName = ComponentName(
-                context,
-                NotificationListener::class.java
-            ),
-            getStringFromSecureSettings = { Settings.Secure.getString(context.contentResolver, it) }
-        )
-    }
+    single { NotificationAccessVerifier(context = get()) }
+
+    // UsageStats
+    single { UsageStatsAccessVerifier(context = get()) }
 
     // Settings
     single { SettingsSource(dataStore = get()) }
@@ -59,7 +51,8 @@ val appModule = module {
             getAllNonSystemApps = get(),
             addToShouldBlockHeadsUp = get(),
             removeFromShouldBlockHeadsUp = get(),
-            notificationAccessVerifier = get()
+            notificationAccessVerifier = get(),
+            usageStatsAccessVerifier = get()
         )
     }
 

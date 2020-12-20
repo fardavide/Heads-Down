@@ -16,9 +16,8 @@ class NotificationAccessVerifierTest {
     }
     private var stringFromSecureSettings: String = ""
     private fun getVerifier() = NotificationAccessVerifier(
-        notificationListenerComponentName = notificationListenerComponentName,
-        getStringFromSecureSettings = { stringFromSecureSettings }
-    )
+        notificationListenerComponentName = notificationListenerComponentName
+    ) { stringFromSecureSettings }
 
     @Test
     fun `emit initial value if access is granted`() = runBlockingTest {

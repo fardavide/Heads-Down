@@ -13,10 +13,15 @@ abstract class StringResources {
         "Heads up in order to mask other Heads up"
 
     // Actions
-    val GrandNotificationAccessAction = "Grant access"
+    val GrandAccessAction = "Grant access"
 
     // Messages
     val BlockHeadsUpForSelectedAppsMessage = "Block heads up for selected apps"
     val NotificationAccessRequiredMessage =
         "Notification access is required for blocking the Heads up notifications"
+    val NotificationAndUsageStatsAccessRequiredMessage =
+        "Notification and Usage Stats access are required for blocking the Heads up " +
+            "notifications and query current foreground applications"
+    val UsageStatsAccessRequiredMessage =
+        "Usage Stats access is required for query current foreground applications"
 }

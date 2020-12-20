@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import studio.forface.headsdown.model.App
 import studio.forface.headsdown.notifications.NotificationAccessVerifier
+import studio.forface.headsdown.usagestats.UsageStatsAccessVerifier
 import studio.forface.headsdown.usecase.AddToShouldBlockHeadsUp
 import studio.forface.headsdown.usecase.GetAllNonSystemApps
 import studio.forface.headsdown.usecase.RemoveFromShouldBlockHeadsUp
@@ -17,16 +18,21 @@ class AppViewModel(
     getAllNonSystemApps: GetAllNonSystemApps,
     private val addToShouldBlockHeadsUp: AddToShouldBlockHeadsUp,
     private val removeFromShouldBlockHeadsUp: RemoveFromShouldBlockHeadsUp,
-    notificationAccessVerifier: NotificationAccessVerifier
+    notificationAccessVerifier: NotificationAccessVerifier,
+    usageStatsAccessVerifier: UsageStatsAccessVerifier
 ) : ViewModel() {
 
     val state: StateFlow<AppState> =
         combine(
             getAllNonSystemApps(),
-            notificationAccessVerifier.hasNotificationAccess
-        ) { allApps, hasNotificationAccess ->
+            notificationAccessVerifier.hasNotificationAccess,
+            usageStatsAccessVerifier.hasUsageStatsAccess
+        ) { allApps, hasNotificationAccess, hasUsageStatsAccess ->
             AppState(
-                hasNotificationAccess = hasNotificationAccess,
+                permissionsState = GrantedPermissionsState(
+                    hasNotificationAccess = hasNotificationAccess,
+                    hasUsageStatsAccess = hasUsageStatsAccess
+                ),
                 generalHeadsUpBlockEnabled = true,
                 AppsWithSettingsState.Data(allApps)
             )

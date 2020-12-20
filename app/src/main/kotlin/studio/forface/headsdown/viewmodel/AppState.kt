@@ -4,16 +4,35 @@ import studio.forface.headsdown.model.AppWithSettings
 
 data class AppState(
 
-    val hasNotificationAccess: Boolean,
+    val permissionsState: GrantedPermissionsState,
     val generalHeadsUpBlockEnabled: Boolean,
     val appsWithSettingsState: AppsWithSettingsState
 )
 
 val InitialState = AppState(
-    hasNotificationAccess = false,
+    permissionsState = GrantedPermissionsState.None,
     generalHeadsUpBlockEnabled = true,
     AppsWithSettingsState.Loading
 )
+
+sealed class GrantedPermissionsState {
+    object None : GrantedPermissionsState()
+    object OnlyNotificationAccess : GrantedPermissionsState()
+    object OnlyUsageStatsAccess : GrantedPermissionsState()
+    object All : GrantedPermissionsState()
+
+    companion object {
+        operator fun invoke(
+            hasNotificationAccess: Boolean,
+            hasUsageStatsAccess: Boolean
+        ): GrantedPermissionsState = when {
+            hasNotificationAccess && hasUsageStatsAccess -> All
+            hasNotificationAccess -> OnlyNotificationAccess
+            hasUsageStatsAccess -> OnlyUsageStatsAccess
+            else -> None
+        }
+    }
+}
 
 sealed class AppsWithSettingsState {
 
