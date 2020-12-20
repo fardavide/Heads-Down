@@ -1,10 +1,14 @@
 package studio.forface.headsdown
 
+import android.content.Intent
 import android.content.res.Resources
 import android.os.Bundle
+import android.provider.Settings
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.animate
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumnFor
 import androidx.compose.foundation.lazy.LazyListState
@@ -14,8 +18,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.AmbientContext
 import androidx.compose.ui.platform.setContent
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.SpanStyleRange
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
@@ -31,6 +40,7 @@ import studio.forface.headsdown.ui.Strings
 import studio.forface.headsdown.viewmodel.AppState
 import studio.forface.headsdown.viewmodel.AppViewModel
 import studio.forface.headsdown.viewmodel.AppsWithSettingsState
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -63,12 +73,23 @@ fun AppBody(
             backgroundColor = MaterialTheme.colors.background,
             topBar = { Toolbar(isAtTop) }
         ) {
-            SettingsPage(
-                state = state,
-                onAddToBlockHeadsUp = onAddToBlockHeadsUp,
-                onRemoveFromBlockHeadsUp = onRemoveFromBlockHeadsUp,
-                onScroll = { isAtTop = it }
-            )
+            Column {
+                if (state.hasNotificationAccess.not()) {
+                    val context = AmbientContext.current
+                    val goToSettings = {
+                        val intent = Intent()
+                        intent.action = Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS
+                        context.startActivity(intent)
+                    }
+                    NotificationAccessBanner(goToSettings = goToSettings)
+                }
+                SettingsPage(
+                    state = state,
+                    onAddToBlockHeadsUp = onAddToBlockHeadsUp,
+                    onRemoveFromBlockHeadsUp = onRemoveFromBlockHeadsUp,
+                    onScroll = { isAtTop = it }
+                )
+            }
         }
     }
 }
@@ -126,6 +147,36 @@ fun Loading() {
 }
 
 @Composable
+fun NotificationAccessBanner(goToSettings: () -> Unit) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colors.error)
+            .clickable(onClick = goToSettings)
+            .padding(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            Strings.NotificationAccessRequiredMessage,
+            color = MaterialTheme.colors.onError,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        val grantAccessString = AnnotatedString(
+            Strings.GrandNotificationAccessAction,
+            listOf(
+                SpanStyleRange(
+                    SpanStyle(textDecoration = TextDecoration.Underline),
+                    0,
+                    Strings.GrandNotificationAccessAction.length
+                )
+            )
+        )
+        Text(grantAccessString, color = MaterialTheme.colors.onError)
+    }
+}
+
+@Composable
 fun AppsWithSettingsList(
     data: List<AppWithSettings>,
     onAddToBlockHeadsUp: (App) -> Unit,
@@ -138,7 +189,7 @@ fun AppsWithSettingsList(
     LazyColumnFor(
         items = data,
         state = listState,
-        contentPadding = PaddingValues(top = 8.dp, bottom = 32.dp)
+        contentPadding = PaddingValues(top = 8.dp, bottom = 32.dp),
     ) { appWithSettings ->
         AppWithSettingsItem(
             appWithSettings = appWithSettings,
@@ -184,21 +235,50 @@ fun AppWithSettingsItem(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    operator fun <T> List<T>.times(count: Int) = toMutableList().apply {
-        repeat(count -1) {
-            addAll(this)
-        }
+// region previews
+private operator fun <T> List<T>.times(count: Int) = toMutableList().apply {
+    repeat(count - 1) {
+        addAll(this)
     }
-    val appsWithSettings = listOf(
-        CineScout with AppSettings(shouldBlockHeadsUp = false),
-        HeadsDown with AppSettings(shouldBlockHeadsUp = false),
-        WildRift with AppSettings(shouldBlockHeadsUp = true),
-        Zooba with AppSettings(shouldBlockHeadsUp = true),
-    ) * 4
+}
+val appsWithSettings = listOf(
+    CineScout with AppSettings(shouldBlockHeadsUp = false),
+    HeadsDown with AppSettings(shouldBlockHeadsUp = false),
+    WildRift with AppSettings(shouldBlockHeadsUp = true),
+    Zooba with AppSettings(shouldBlockHeadsUp = true),
+) * 4
+
+@Composable
+@Preview(name = "Loading with permissions", showBackground = true)
+fun LoadingWithPermissionsPreview() {
     val state = AppState(
+        hasNotificationAccess = true,
+        generalHeadsUpBlockEnabled = true,
+        AppsWithSettingsState.Loading
+    )
+    val appStateFlow = MutableStateFlow(state)
+
+    AppBody(appStateFlow, {}, {})
+}
+
+@Composable
+@Preview(name = "Loading without permissions", showBackground = true)
+fun LoadingWithoutPermissionsPreview() {
+    val state = AppState(
+        hasNotificationAccess = false,
+        generalHeadsUpBlockEnabled = true,
+        AppsWithSettingsState.Loading
+    )
+    val appStateFlow = MutableStateFlow(state)
+
+    AppBody(appStateFlow, {}, {})
+}
+
+@Composable
+@Preview(name = "List with permissions", showBackground = true)
+fun ListWithPermissionPreview() {
+    val state = AppState(
+        hasNotificationAccess = true,
         generalHeadsUpBlockEnabled = true,
         AppsWithSettingsState.Data(appsWithSettings)
     )
@@ -206,3 +286,17 @@ fun DefaultPreview() {
 
     AppBody(appStateFlow, {}, {})
 }
+
+@Composable
+@Preview(name = "List without permissions", showBackground = true)
+fun ListWithoutPermissionPreview() {
+    val state = AppState(
+        hasNotificationAccess = false,
+        generalHeadsUpBlockEnabled = true,
+        AppsWithSettingsState.Data(appsWithSettings)
+    )
+    val appStateFlow = MutableStateFlow(state)
+
+    AppBody(appStateFlow, {}, {})
+}
+// endregion

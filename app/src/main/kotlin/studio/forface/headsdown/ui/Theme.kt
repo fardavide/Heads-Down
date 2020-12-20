@@ -23,7 +23,8 @@ private val DarkColorPalette = darkColors(
     secondary = SalmonPink,
     // secondaryVariant = Bittersweet,
     background = RichBlack,
-    surface = EerieBlack
+    surface = EerieBlack,
+    error = Bittersweet
 )
 
 private val LightColorPalette = lightColors(
@@ -32,7 +33,8 @@ private val LightColorPalette = lightColors(
     secondary = Bittersweet,
     secondaryVariant = OrangeRedCrayola,
     background = White,
-    surface = Cultured
+    surface = Cultured,
+    error = OrangeRedCrayola
 
     /* Other default colors to override
     onPrimary = Color.White,

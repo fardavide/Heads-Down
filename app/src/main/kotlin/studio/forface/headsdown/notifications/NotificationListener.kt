@@ -8,15 +8,18 @@ import studio.forface.headsdown.utils.i
 
 class NotificationListener : NotificationListenerService() {
 
+    private val notificationAccessVerifier: NotificationAccessVerifier by inject()
     private val logger: Logger by inject()
 
     override fun onListenerConnected() {
         super.onListenerConnected()
+        notificationAccessVerifier.hasNotificationAccess.value = true
         logger i "NotificationListener connected"
     }
 
     override fun onListenerDisconnected() {
         super.onListenerDisconnected()
+        notificationAccessVerifier.hasNotificationAccess.value = false
         logger i "NotificationListener disconnected"
     }
 

@@ -8,15 +8,26 @@ import kotlinx.coroutines.launch
 import studio.forface.headsdown.data.AppRepository
 import studio.forface.headsdown.model.App
 import studio.forface.headsdown.model.AppSettings
+import studio.forface.headsdown.notifications.NotificationAccessVerifier
 import studio.forface.headsdown.utils.v
 
 class AppViewModel(
     private val logger: Logger,
-    private val repository: AppRepository
+    private val repository: AppRepository,
+    notificationAccessVerifier: NotificationAccessVerifier
 ) : ViewModel() {
 
-    val state: StateFlow<AppState> = repository.allApps()
-        .map { AppState(generalHeadsUpBlockEnabled = true, AppsWithSettingsState.Data(it)) }
+    val state: StateFlow<AppState> =
+        combine(
+            repository.allApps(),
+            notificationAccessVerifier.hasNotificationAccess
+        ) { allApps, hasNotificationAccess ->
+            AppState(
+                hasNotificationAccess = hasNotificationAccess,
+                generalHeadsUpBlockEnabled = true,
+                AppsWithSettingsState.Data(allApps)
+            )
+        }
         .onStart { logger v "start loading data" }
         .stateIn(viewModelScope, SharingStarted.Eagerly, InitialState)
 

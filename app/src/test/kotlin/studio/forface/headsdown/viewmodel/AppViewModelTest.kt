@@ -20,8 +20,32 @@ class AppViewModelTest {
     private val viewModel = AppViewModel(logger = CommonLogger(), repository = repo)
 
     @Test
-    fun `initial state is InitialState`() = runBlockingTest {
+    fun `InitialState at start`() = runBlockingTest {
 
         assert that viewModel.state.first() equals InitialState
+    }
+
+    @Test
+    fun `correct state with notification access`() = runBlockingTest {
+
+        val expected = AppState(
+            hasNotificationAccess = true,
+            generalHeadsUpBlockEnabled = true,
+            AppsWithSettingsState.Loading
+        )
+
+        assert that viewModel.state.first() equals expected
+    }
+
+    @Test
+    fun `correct state without notification access`() = runBlockingTest {
+
+        val expected = AppState(
+            hasNotificationAccess = false,
+            generalHeadsUpBlockEnabled = true,
+            AppsWithSettingsState.Loading
+        )
+
+        assert that viewModel.state.first() equals expected
     }
 }
