@@ -1,7 +1,9 @@
 package studio.forface.headsdown
 
+import android.graphics.Canvas
+import android.graphics.ColorFilter
+import android.graphics.PixelFormat
 import android.graphics.drawable.Drawable
-import io.mockk.mockk
 import studio.forface.headsdown.model.App
 import studio.forface.headsdown.model.PackageName
 
@@ -25,9 +27,13 @@ val Zooba = App(
     packageName = "some.pkg.zooba"
 )
 
-private val MockDrawable: Drawable = mockk()
 private fun App(appName: String, packageName: String) = App(
     appName = appName,
     packageName = PackageName(packageName),
-    icon = mockk()
+    icon = object : Drawable() {
+        override fun draw(canvas: Canvas) {}
+        override fun setAlpha(alpha: Int) {}
+        override fun setColorFilter(colorFilter: ColorFilter?) {}
+        override fun getOpacity(): Int = PixelFormat.OPAQUE
+    }
 )

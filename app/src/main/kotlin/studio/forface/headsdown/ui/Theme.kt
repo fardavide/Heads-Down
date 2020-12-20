@@ -18,8 +18,8 @@ import studio.forface.headsdown.ui.Colors.SalmonPink
 import studio.forface.headsdown.ui.Colors.White
 
 private val DarkColorPalette = darkColors(
-    primary = CambridgeBlue,
-    primaryVariant = CeruleanFrost,
+    primary = CeruleanFrost,
+    primaryVariant = CambridgeBlue,
     secondary = SalmonPink,
     // secondaryVariant = Bittersweet,
     background = RichBlack,
@@ -27,8 +27,8 @@ private val DarkColorPalette = darkColors(
 )
 
 private val LightColorPalette = lightColors(
-    primary = EtonBlue,
-    primaryVariant = CeladonBlue,
+    primary = CeladonBlue,
+    primaryVariant = EtonBlue,
     secondary = Bittersweet,
     secondaryVariant = OrangeRedCrayola,
     background = White,

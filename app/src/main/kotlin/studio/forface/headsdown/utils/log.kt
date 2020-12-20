@@ -1,23 +1,25 @@
-package utils
+package studio.forface.headsdown.utils
 
 import co.touchlab.kermit.Logger
 
-fun Logger.v(message: Any, tag: String, throwable: Throwable? = null) {
-    v(message.toString(), tag, throwable)
+infix fun Logger.v(message: Any) {
+    v(message.toString(), AppTag)
 }
 
-fun Logger.d(message: Any, tag: String, throwable: Throwable? = null) {
-    d(message.toString(), tag, throwable)
+infix fun Logger.d(message: Any) {
+    d(message.toString(), AppTag)
 }
 
-fun Logger.i(message: Any, tag: String, throwable: Throwable? = null) {
-    i(message.toString(), tag, throwable)
+infix fun Logger.i(message: Any) {
+    i(message.toString(), AppTag)
 }
 
-fun Logger.w(message: Any, tag: String, throwable: Throwable? = null) {
-    w(message.toString(), tag, throwable)
+infix fun Logger.w(message: Any) {
+    w(message.toString(), AppTag)
 }
 
-fun Logger.e(message: Any, tag: String, throwable: Throwable? = null) {
-    e(message.toString(), tag, throwable)
+infix fun Logger.e(message: Any) {
+    e(message.toString(), AppTag)
 }
+
+private const val AppTag = "HeadsDown"

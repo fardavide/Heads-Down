@@ -4,7 +4,7 @@ import android.graphics.drawable.Drawable
 import kotlinx.serialization.Serializable
 
 data class App(
-    val appName: CharSequence,
+    val appName: String,
     val packageName: PackageName,
     val icon: Drawable
 )

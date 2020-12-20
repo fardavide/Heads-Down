@@ -4,9 +4,9 @@ import android.annotation.SuppressLint
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
-import android.graphics.drawable.Drawable
 import studio.forface.headsdown.model.App
 import studio.forface.headsdown.model.PackageName
+import java.util.*
 
 
 class AndroidAppSource(
@@ -21,8 +21,8 @@ class AndroidAppSource(
             val appName = packageInfo.applicationInfo.loadLabel(packageManager)
             val packageName = packageInfo.applicationInfo.packageName
             val icon = packageInfo.applicationInfo.loadIcon(packageManager)
-            App(appName, PackageName(packageName), icon)
-        }
+            App(appName.toString(), PackageName(packageName), icon)
+        }.sortedBy { it.appName.toLowerCase(Locale.getDefault()) }
     }
 
     private fun isSystemPackage(packageInfo: PackageInfo): Boolean =
