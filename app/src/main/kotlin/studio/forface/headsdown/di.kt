@@ -14,6 +14,7 @@ import studio.forface.headsdown.data.AppRepositoryImpl
 import studio.forface.headsdown.data.SettingsSource
 import studio.forface.headsdown.notifications.NotificationAccessVerifier
 import studio.forface.headsdown.notifications.NotificationListener
+import studio.forface.headsdown.usecase.*
 import studio.forface.headsdown.viewmodel.AppViewModel
 
 val dataModule = module {
@@ -41,12 +42,27 @@ val dataModule = module {
     single { get<Context>().createDataStore("settings") }
 }
 
+val useCaseModule = module {
+
+    factory { AddToShouldBlockHeadsUp(repo = get()) }
+    factory { GetAllApps(repo = get()) }
+    factory { GetAllBlockingHeadsUpApps(repo = get()) }
+    factory { GetAllNonSystemApps(repo = get()) }
+    factory { RemoveFromShouldBlockHeadsUp(repo = get()) }
+}
+
 val appModule = module {
 
     viewModel {
-        AppViewModel(logger = get(), repository = get(), notificationAccessVerifier = get())
+        AppViewModel(
+            logger = get(),
+            getAllNonSystemApps = get(),
+            addToShouldBlockHeadsUp = get(),
+            removeFromShouldBlockHeadsUp = get(),
+            notificationAccessVerifier = get()
+        )
     }
 
     single<Logger> { LogcatLogger() }
 
-} + dataModule
+} + useCaseModule + dataModule

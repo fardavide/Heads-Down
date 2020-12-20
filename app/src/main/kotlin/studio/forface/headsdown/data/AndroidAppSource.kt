@@ -13,15 +13,17 @@ class AndroidAppSource(
     private val packageManager: PackageManager
 ) {
 
-    fun allApps(): List<App> {
+    fun allApps(includeSystemApps: Boolean): List<App> {
         @SuppressLint("QueryPermissionsNeeded")
         val packages = packageManager.getInstalledPackages(PackageManager.GET_META_DATA)
+            .map { it to isSystemPackage(it) }
+            .filter { (_, isSystemApp) -> includeSystemApps || isSystemApp.not() }
 
-        return packages.filterNot(::isSystemPackage).map { packageInfo ->
+        return packages.map { (packageInfo, isSystemApp) ->
             val appName = packageInfo.applicationInfo.loadLabel(packageManager)
             val packageName = packageInfo.applicationInfo.packageName
             val icon = packageInfo.applicationInfo.loadIcon(packageManager)
-            App(appName.toString(), PackageName(packageName), icon)
+            App(appName.toString(), PackageName(packageName), icon, isSystemApp)
         }.sortedBy { it.appName.toLowerCase(Locale.getDefault()) }
     }
 

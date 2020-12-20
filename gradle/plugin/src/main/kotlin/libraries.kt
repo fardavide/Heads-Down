@@ -1,5 +1,4 @@
 import org.gradle.api.Project
-import studio.forface.easygradle.dsl.exclude
 import studio.forface.easygradle.dsl.version
 
 fun arrow(moduleName: String) = "io.arrow-kt:arrow-$moduleName" version ARROW_VERSION
@@ -37,6 +36,9 @@ object Android {
 
     fun dataStore(moduleName: String? = null) =
         "androidx.datastore:datastore${moduleName.module()}" version DATASTORE_VERSION
+
+    fun fluentNotifications() =
+        "studio.forface.fluentnotifications:fluentnotifications" version FLUENT_NOTIFICATIONS_VERSION
 
     fun ktx() = ktx("core") version KTX_VERSION
     fun ktx(moduleName: String) = "androidx.$moduleName:$moduleName-ktx"

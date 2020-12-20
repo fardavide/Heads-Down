@@ -6,7 +6,8 @@ import kotlinx.serialization.Serializable
 data class App(
     val appName: String,
     val packageName: PackageName,
-    val icon: Drawable
+    val icon: Drawable,
+    val isSystemApp: Boolean
 )
 
 data class PackageName(val value: String)

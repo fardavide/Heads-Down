@@ -1,6 +1,9 @@
 package studio.forface.headsdown.data
 
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import studio.forface.headsdown.model.App
 import studio.forface.headsdown.model.AppSettings
 import studio.forface.headsdown.model.AppWithSettings
@@ -12,7 +15,18 @@ class AppRepositoryImpl(
 ) : AppRepository {
 
     override fun allApps(): Flow<List<AppWithSettings>> =
-        flowOf(androidAppSource.allApps())
+        allApps(includeSystemApp = true)
+
+    override fun allNonSystemApps(): Flow<List<AppWithSettings>> =
+        allApps(includeSystemApp = false)
+
+    override fun allBlockingHeadsUpApps(): Flow<List<AppWithSettings>> =
+        allApps().map { list ->
+            list.filter { appWithSettings -> appWithSettings.settings.shouldBlockHeadsUp }
+        }
+
+    private fun allApps(includeSystemApp: Boolean): Flow<List<AppWithSettings>> =
+        flowOf(androidAppSource.allApps(includeSystemApp))
             .flatMapLatest { apps ->
                 settingsSource.appsWithBlockedHeadsUp().map {
                     apps.withSettings(it)

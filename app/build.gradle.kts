@@ -1,6 +1,5 @@
 import studio.forface.easygradle.dsl.Version
 import studio.forface.easygradle.dsl.archivesBaseName
-import studio.forface.easygradle.dsl.exclude
 
 plugins {
     id("com.android.application")
@@ -34,6 +33,7 @@ dependencies {
         Android.activity(),
         Android.appCompat(),
         Android.dataStore("preferences"),
+        Android.fluentNotifications(),
         Android.ktx(),
         Android.viewModel(),
 

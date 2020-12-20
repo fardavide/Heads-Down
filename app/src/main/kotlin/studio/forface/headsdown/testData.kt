@@ -17,6 +17,12 @@ val HeadsDown = App(
     packageName = "studio.forface.headsdown"
 )
 
+val Phone = App(
+    appName = "Phone",
+    packageName = "system.phone",
+    isSystemApp = true
+)
+
 val WildRift = App(
     appName = "WildRift",
     packageName = "some.pkg.wildrift"
@@ -27,7 +33,7 @@ val Zooba = App(
     packageName = "some.pkg.zooba"
 )
 
-private fun App(appName: String, packageName: String) = App(
+private fun App(appName: String, packageName: String, isSystemApp: Boolean = false) = App(
     appName = appName,
     packageName = PackageName(packageName),
     icon = object : Drawable() {
@@ -35,5 +41,6 @@ private fun App(appName: String, packageName: String) = App(
         override fun setAlpha(alpha: Int) {}
         override fun setColorFilter(colorFilter: ColorFilter?) {}
         override fun getOpacity(): Int = PixelFormat.OPAQUE
-    }
+    },
+    isSystemApp = isSystemApp
 )

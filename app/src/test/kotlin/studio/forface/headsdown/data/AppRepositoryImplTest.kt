@@ -10,10 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runBlockingTest
-import studio.forface.headsdown.CineScout
-import studio.forface.headsdown.HeadsDown
-import studio.forface.headsdown.WildRift
-import studio.forface.headsdown.Zooba
+import studio.forface.headsdown.*
 import studio.forface.headsdown.model.AppSettings
 import studio.forface.headsdown.model.PackageName
 import studio.forface.headsdown.model.with
@@ -24,14 +21,57 @@ class AppRepositoryImplTest {
     private val allTestApps = listOf(
         CineScout,
         HeadsDown,
+        Phone,
         WildRift,
         Zooba
     )
     private val androidAppSource: AndroidAppSource = mockk {
-        every { allApps() } returns allTestApps
+        every { allApps(any()) } answers {
+            val includeSystemApp: Boolean = firstArg()
+            allTestApps.filter { includeSystemApp || it.isSystemApp.not() }
+        }
     }
     private val settingsSource: SettingsSource = mockk()
     private val repo = AppRepositoryImpl(androidAppSource, settingsSource)
+
+    @Test
+    fun `allNonSystemApps returns all the apps if no settings is stored`() = runBlockingTest {
+
+        // given
+        every { settingsSource.appsWithBlockedHeadsUp() } returns flowOf(emptySet())
+        val expected = listOf(
+            CineScout with AppSettings(shouldBlockHeadsUp = false),
+            HeadsDown with AppSettings(shouldBlockHeadsUp = false),
+            WildRift with AppSettings(shouldBlockHeadsUp = false),
+            Zooba with AppSettings(shouldBlockHeadsUp = false),
+        )
+
+        // when
+        val result = repo.allNonSystemApps().first()
+
+        // then
+        assert that result equals expected
+    }
+
+    @Test
+    fun `allNonSystemApps returns all the apps with relative stored settings`() = runBlockingTest {
+
+        // given
+        val appsThatShouldBlockHeadsUp = setOf(WildRift.packageName, Zooba.packageName)
+        every { settingsSource.appsWithBlockedHeadsUp() } returns flowOf(appsThatShouldBlockHeadsUp)
+        val expected = listOf(
+            CineScout with AppSettings(shouldBlockHeadsUp = false),
+            HeadsDown with AppSettings(shouldBlockHeadsUp = false),
+            WildRift with AppSettings(shouldBlockHeadsUp = true),
+            Zooba with AppSettings(shouldBlockHeadsUp = true),
+        )
+
+        // when
+        val result = repo.allNonSystemApps().first()
+
+        // then
+        assert that result equals expected
+    }
 
     @Test
     fun `allApps returns all the apps if no settings is stored`() = runBlockingTest {
@@ -41,6 +81,7 @@ class AppRepositoryImplTest {
         val expected = listOf(
             CineScout with AppSettings(shouldBlockHeadsUp = false),
             HeadsDown with AppSettings(shouldBlockHeadsUp = false),
+            Phone with AppSettings(shouldBlockHeadsUp = false),
             WildRift with AppSettings(shouldBlockHeadsUp = false),
             Zooba with AppSettings(shouldBlockHeadsUp = false),
         )
@@ -61,6 +102,7 @@ class AppRepositoryImplTest {
         val expected = listOf(
             CineScout with AppSettings(shouldBlockHeadsUp = false),
             HeadsDown with AppSettings(shouldBlockHeadsUp = false),
+            Phone with AppSettings(shouldBlockHeadsUp = false),
             WildRift with AppSettings(shouldBlockHeadsUp = true),
             Zooba with AppSettings(shouldBlockHeadsUp = true),
         )
@@ -89,6 +131,7 @@ class AppRepositoryImplTest {
         val expected = listOf(
             CineScout with AppSettings(shouldBlockHeadsUp = false),
             HeadsDown with AppSettings(shouldBlockHeadsUp = false),
+            Phone with AppSettings(shouldBlockHeadsUp = false),
             WildRift with AppSettings(shouldBlockHeadsUp = true),
             Zooba with AppSettings(shouldBlockHeadsUp = true),
         )
@@ -121,6 +164,7 @@ class AppRepositoryImplTest {
         val expected = listOf(
             CineScout with AppSettings(shouldBlockHeadsUp = false),
             HeadsDown with AppSettings(shouldBlockHeadsUp = false),
+            Phone with AppSettings(shouldBlockHeadsUp = true),
             WildRift with AppSettings(shouldBlockHeadsUp = true),
             Zooba with AppSettings(shouldBlockHeadsUp = true),
         )
